@@ -1,0 +1,10 @@
+# Packages for the Snowflake Notebooks (warehouse runtime).
+# When importing a .ipynb by hand, add these in the notebook's "Packages" menu instead.
+name: app_environment
+channels:
+  - snowflake
+dependencies:
+  - snowflake-ml-python
+  - scikit-learn
+  - xgboost
+  - pandas

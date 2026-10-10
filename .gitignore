@@ -1,0 +1,16 @@
+# Downloaded data stays local (re-create with scripts/download_ny_wcb.py)
+data/
+*.parquet
+*.csv
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+.ipynb_checkpoints/
+
+# Snowflake credentials
+.env
+connections.toml
+config.toml

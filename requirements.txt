@@ -1,0 +1,6 @@
+# Local-only: for downloading the data and running tests.
+# Notebook packages are chosen inside Snowflake (see notebooks/environment.yml).
+pandas>=2.0
+pyarrow>=14
+requests>=2.31
+pytest>=8

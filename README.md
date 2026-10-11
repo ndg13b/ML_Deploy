@@ -75,13 +75,16 @@ Snowflake won't run notebooks owned by ACCOUNTADMIN, so switch roles first.
 1. **Switch role:** click your name (bottom left) → **Switch role** → `WC_ML_ROLE`.
 2. **Add the notebooks:** **Projects → Workspaces**, then **+ Add new → Upload files** (or drag the files into
    the file panel). Upload both `.ipynb` files from `notebooks/`.
-3. **Connect compute:** open `01_explore_claims.ipynb` and click **Connect** at the top, then **Create new service**.
-   - Compute pool: `SYSTEM_COMPUTE_POOL_CPU` (every account has it)
-   - Query warehouse: `WC_ML_WH`
-   - Idle timeout: short, for example 30–60 minutes, because the service bills while it runs
-   - Leave the Python and runtime versions at their defaults
+3. **Connect compute:** open `01_explore_claims.ipynb` and click **Connect**. The **Connect your notebook**
+   dialog opens.
+   - Service name, Artifact repositories (`SNOWFLAKE.SNOWPARK.PYPI_SHARED_REPOSITORY`) and the
+     CPU / Python 3.12 runtime on `SYSTEM_COMPUTE_POOL_CPU`: keep the defaults
+   - Enable distributed compute: leave it off
+   - **Service settings → idle timeout: change it from the 24-hour default to about 1 hour.** The service bills
+     while it runs, and the resource monitor doesn't cover it.
+   - There's no warehouse field here. The notebooks switch to `WC_ML_WH` in their first cell.
 
-   Both notebooks can share this one service.
+   Click **Create and connect**. Both notebooks can share this one service.
 4. **Run** `01_explore_claims`, then `02_train_and_register`. The first cell of each should show `WC_ML_ROLE`
    and `WC_ML_WH`. `snowflake-ml-python`, `scikit-learn` and `xgboost` come preinstalled, and the training
    notebook prints their versions. The training notebook registers `WC_ML.MODELS.WC_LITIGATION_XGB`.

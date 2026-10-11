@@ -111,6 +111,25 @@ Run `deploy/04_deploy_scoring.sql` in a worksheet, one section at a time. It cov
   (precision-recall area under the curve), Brier score (probability accuracy) and lift by risk decile.
   The decile view is the most practical one for claims triage.
 
+## Running the training code as a `.py` script
+
+The modeling code (pandas, scikit-learn, XGBoost, Model Registry) works unchanged outside a notebook.
+Only two things differ:
+
+1. **Displaying results.** A notebook shows the value of a cell's last line automatically, but a script doesn't.
+   Wrap those lines in `print(...)`, for example `print(test_metrics)`.
+2. **Getting a session.**
+
+| Where the script runs | How it gets a Snowflake session |
+|---|---|
+| A `.py` file in Workspaces, on the same notebook service | `get_active_session()`, as in the notebook |
+| A Snowflake ML Job (`snowflake.ml.jobs`) on a compute pool | `get_active_session()` |
+| A stored procedure | Snowflake passes the session in as the handler's first argument (`def run(session, ...)`). See `deploy/04_deploy_scoring.sql`. |
+| Your laptop | `Session.builder.configs({...}).create()` with your account, user, password, role and warehouse |
+
+For a scheduled retraining job you'd also wrap the steps in a `main()` function, and log to the registry only if
+the new version beats the current default.
+
 ## Keeping costs down
 - The warehouse is X-Small (1 credit per hour, billed per second) and suspends after 60 idle seconds.
 - `WC_ML_MONITOR` notifies at 30 credits and suspends the warehouse at 40.

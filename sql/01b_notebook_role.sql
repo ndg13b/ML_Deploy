@@ -12,7 +12,9 @@ CREATE ROLE IF NOT EXISTS WC_ML_ROLE;
 
 -- Give the role to you, and to SYSADMIN so admin roles can still see what it creates
 -- (SYSADMIN rolls up to ACCOUNTADMIN, so the deploy SQL can use the registered model).
-SET MY_USER = CURRENT_USER();
+-- The double quotes make the name match exactly. Without them IDENTIFIER uppercases it,
+-- which fails for user names stored in lowercase (common for trial sign-ups).
+SET MY_USER = '"' || CURRENT_USER() || '"';
 GRANT ROLE WC_ML_ROLE TO USER IDENTIFIER($MY_USER);
 GRANT ROLE WC_ML_ROLE TO ROLE SYSADMIN;
 

@@ -25,6 +25,7 @@ Everything runs on a Snowflake free trial.
 | Path | What it does |
 |---|---|
 | `sql/01_setup.sql` | Warehouse, database, schemas, stage and a **resource monitor** (credit cap) |
+| `sql/01b_notebook_role.sql` | `WC_ML_ROLE`, the non-admin role the notebooks run as |
 | `scripts/download_ny_wcb.py` | Downloads claims for chosen years from data.ny.gov into Parquet files |
 | `sql/02_load_raw.sql` | Loads the Parquet files into `WC_ML.RAW.NY_WCB_CLAIMS` |
 | `sql/03_features.sql` | Feature view. All cleaning and leakage rules live here |
@@ -64,14 +65,27 @@ Optional: a free [Socrata app token](https://data.ny.gov/profile/edit/developer_
    *(Command-line alternative with the [Snowflake CLI](https://docs.snowflake.com/en/developer-guide/snowflake-cli/index):
    `snow stage copy "data/ny_wcb/*.parquet" @WC_ML.RAW.WCB_STAGE`)*
 3. Run `sql/02_load_raw.sql`, then `sql/03_features.sql`, in a worksheet.
+4. Run `sql/01b_notebook_role.sql`. It creates `WC_ML_ROLE`, which the notebooks run as.
 
-### 4. Explore and train in Snowflake Notebooks
-1. **Projects → Notebooks → ⌄ (next to + Notebook) → Import .ipynb file**, then import both files from `notebooks/`.
-   - Location: database `WC_ML`, schema `NOTEBOOKS`
-   - Runtime: **Warehouse runtime**. Use `WC_ML_WH` for both the query and the notebook warehouse,
-     so the resource monitor covers all spending.
-2. In each notebook open **Packages** and add `snowflake-ml-python`, `scikit-learn` and `xgboost`.
-3. Run `01_explore_claims`, then `02_train_and_register`. The second registers `WC_ML.MODELS.WC_LITIGATION_XGB`.
+### 4. Explore and train in Snowflake Notebooks (Workspaces)
+Notebooks live in **Workspaces** and run on *Container Runtime*. Python runs on a small personal machine
+Snowflake calls a **notebook service**, and SQL runs on your warehouse.
+Snowflake won't run notebooks owned by ACCOUNTADMIN, so switch roles first.
+
+1. **Switch role:** click your name (bottom left) → **Switch role** → `WC_ML_ROLE`.
+2. **Add the notebooks:** **Projects → Workspaces**, then **+ Add new → Upload files** (or drag the files into
+   the file panel). Upload both `.ipynb` files from `notebooks/`.
+3. **Connect compute:** open `01_explore_claims.ipynb` and click **Connect** at the top, then **Create new service**.
+   - Compute pool: `SYSTEM_COMPUTE_POOL_CPU` (every account has it)
+   - Query warehouse: `WC_ML_WH`
+   - Idle timeout: short, for example 30–60 minutes, because the service bills while it runs
+   - Leave the Python and runtime versions at their defaults
+
+   Both notebooks can share this one service.
+4. **Run** `01_explore_claims`, then `02_train_and_register`. The first cell of each should show `WC_ML_ROLE`
+   and `WC_ML_WH`. `snowflake-ml-python`, `scikit-learn` and `xgboost` come preinstalled, and the training
+   notebook prints their versions. The training notebook registers `WC_ML.MODELS.WC_LITIGATION_XGB`.
+5. **When you're done,** suspend the service from the **Connect** menu, or let the idle timeout stop it.
 
 ### 5. Deploy
 Run `deploy/04_deploy_scoring.sql` in a worksheet, one section at a time. It covers:
@@ -97,8 +111,9 @@ Run `deploy/04_deploy_scoring.sql` in a worksheet, one section at a time. It cov
 ## Keeping costs down
 - The warehouse is X-Small (1 credit per hour, billed per second) and suspends after 60 idle seconds.
 - `WC_ML_MONITOR` notifies at 30 credits and suspends the warehouse at 40.
+- Resource monitors only watch **warehouses**. The notebook service runs on a compute pool, which the monitor
+  doesn't cover, so keep its idle timeout short and suspend it when you finish.
 - Use **Admin → Cost Management** in Snowsight to see what you've spent.
-- Notebooks keep the warehouse running while they're open, so close them (or end the session) when you're done.
 
 ## Run the local tests
 ```bash

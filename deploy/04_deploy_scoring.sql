@@ -7,16 +7,20 @@ USE ROLE ACCOUNTADMIN;
 USE WAREHOUSE WC_ML_WH;
 
 -- ---------------------------------------------------------------------
--- A) Ad-hoc inference straight from SQL (uses the model's DEFAULT version).
---    Arguments must be in the same order as the model signature:
---    numeric features first, then categorical (see FEATURES in the notebook).
---    The notebook prints mv.show_functions() if you need to check names.
+-- A) Ad-hoc inference straight from SQL, using the model's DEFAULT version.
+--    Syntax: <model name>!<method>(...). Arguments must be in the same order as the
+--    model signature: numeric features first, then categorical (FEATURES in the notebook).
+--    PRED is an object holding one probability per class. The notebook's
+--    mv.show_functions() output lists the key names (class 1 = litigated).
+--
+--    To call one specific version instead of the default:
+--      WITH mv AS MODEL WC_ML.MODELS.WC_LITIGATION_XGB VERSION V_20261014_120000
+--      SELECT mv!PREDICT_PROBA(...) FROM ...;
 -- ---------------------------------------------------------------------
-WITH mv AS MODEL WC_ML.MODELS.WC_LITIGATION_XGB
 SELECT
   f.CLAIM_IDENTIFIER,
   f.IS_LITIGATED,
-  mv!PREDICT_PROBA(
+  WC_ML.MODELS.WC_LITIGATION_XGB!PREDICT_PROBA(
     f.AGE_AT_INJURY, f.REPORT_LAG_DAYS, f.ACCIDENT_MONTH, f.ACCIDENT_DOW,
     f.GENDER, f.CARRIER_TYPE, f.DISTRICT_NAME, f.COUNTY_OF_INJURY, f.MEDICAL_FEE_REGION,
     f.INDUSTRY_CODE, f.WCIO_CAUSE_CODE, f.WCIO_NATURE_CODE, f.WCIO_BODY_CODE, f.COVID_19_INDICATOR

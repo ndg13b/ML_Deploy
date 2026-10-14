@@ -92,7 +92,7 @@ Snowflake won't run notebooks owned by ACCOUNTADMIN, so switch roles first.
 
 ### 5. Deploy
 Run `deploy/04_deploy_scoring.sql` in a worksheet, one section at a time. It covers:
-- **A.** Calling the model from SQL: `WITH mv AS MODEL ... SELECT mv!PREDICT_PROBA(...)`
+- **A.** Calling the model from SQL: `SELECT WC_ML.MODELS.WC_LITIGATION_XGB!PREDICT_PROBA(...)`
 - **B.** A stored procedure that scores every claim not yet scored and writes `SCORING.CLAIM_LITIGATION_SCORES`
 - **C.** A daily **Task**. It's created *suspended*, so it uses no credits until you `RESUME` it.
 - **D.** A decile table comparing predicted and actual litigation rates for monitoring
